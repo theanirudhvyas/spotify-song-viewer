@@ -12,7 +12,8 @@
         "request": "^2.88.2"
     },
     "engines": {
-        "node": "12.18.x"
+        "node": "12.18.x",
+        "npm": "6.14.5"
     },
     "devDependencies": {},
     "scripts": {
