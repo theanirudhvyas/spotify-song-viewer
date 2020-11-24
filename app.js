@@ -9,6 +9,8 @@
 
 require('dotenv').config();
 
+process.env.PWD = process.cwd();
+
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
 var cors = require('cors');
@@ -38,7 +40,7 @@ var stateKey = 'spotify_auth_state';
 
 var app = express();
 
-app.use(express.static(__dirname + '/public'))
+app.use(express.static(process.env.PWD + '/public'))
    .use(cors())
    .use(cookieParser());
 
