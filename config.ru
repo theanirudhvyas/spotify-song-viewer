@@ -1,3 +1,3 @@
 require './server.rb'
 
-run Server::Application
+Server.run!
