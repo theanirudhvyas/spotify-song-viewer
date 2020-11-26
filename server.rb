@@ -8,6 +8,7 @@ class Server < Sinatra::Base
   @@client_id = ENV['CLIENT_ID']
   @@redirect_uri = ENV['REDIRECT_URI']
   @@client_secret = ENV['CLIENT_SECRET']
+  @@user_id = 'anirudh2403'
 
   GRANT_TYPE = 'authorization_code'
 
@@ -15,6 +16,10 @@ class Server < Sinatra::Base
     @tokens = {}
     @log = Logger.new(STDOUT)
     super
+  end
+
+  before do
+    content_type :json
   end
 
   get '/login' do
@@ -32,18 +37,56 @@ class Server < Sinatra::Base
                                     client_id: @@client_id,
                                     client_secret: @@client_secret})
     if response.success?
-      @tokens['access'] = response['access_token']
-      @tokens['refresh'] = response['refresh_token']
+      @tokens[:access] = response['access_token']
+      @tokens[:refresh] = response['refresh_token']
       @log.info "fetched the access and refresh tokens"
     else
-      @log.error "Fetching of API token failed with response code: #{response.code}. The complete response is: #{response}"
+      @log.error "Fetching of API token failed with response code: #{response.code}. The complete response is: #{response.body}"
     end
 
     content_type :json
 
     HTTParty.get("https://api.spotify.com/v1/me",
-                 headers: { 'Authorization' => "Bearer #{@tokens['access']}",
+                 headers: { 'Authorization' => "Bearer #{@tokens[:access]}",
                             'Accept' => "application/json",
-                            'Content-Type' => "application/json"}).to_json
+                            'Content-Type' => "application/json"})
+  end
+
+  get '/playlists' do
+    response = HTTParty.get("https://api.spotify.com/v1/users/#{@@user_id}/playlists",
+                          headers: { 'Authorization' => "Bearer #{@tokens[:access]}"})
+
+    if response.success?
+      return result
+    elsif response.unauthorized?
+      log.info "The response is unauthorized, refreshing tokens"
+      response = refresh_access_token
+      return json status: response.code, body: {success: true, errors: [response['error']], data: {}} unless response.success?
+      return redirect '/playlists/'
+    else
+     return json status: response.code, body: {success: false, errors: [response['error']], data: {}}
+    end
+    content_type :json
+  end
+
+
+  private
+
+  def refresh_access_token
+    response = HTTParty.post('https://accounts.spotify.com/api/token',
+                           body: {grant_type: 'refresh_token',
+                                  refresh_token: @tokens[:refresh],
+                                  client_id: @@client_id,
+                                  client_secret: @@client_secret})
+
+    if response.success?
+      @tokens[:access] = response['access_token']
+      log.info "Successfuly refreshed access token"
+
+    else
+      log.error "Refreshing of access token failed with code: #{response.code}. The complete response is: #{response.body}"
+    end
+
+    response
   end
 end
