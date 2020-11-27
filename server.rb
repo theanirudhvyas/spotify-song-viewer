@@ -56,7 +56,7 @@ class Server < Sinatra::Base
                           headers: { 'Authorization' => "Bearer #{@tokens[:access]}"})
 
     if response.success?
-      return response.code, [], { success: true, data: {playlists: response.body}, errors: []}
+      return response.code, [], { success: true, data: {playlists: response.body}, errors: []}.to_json
     elsif response.unauthorized?
       @log.info "The response is unauthorized, refreshing tokens"
       response = refresh_access_token
