@@ -1,0 +1,10 @@
+* {
+    background-color: #1A202C;
+}
+
+.qr-image {
+    margin: auto;
+    display: block;
+    width: 60%;
+    padding: 200px 0;
+}

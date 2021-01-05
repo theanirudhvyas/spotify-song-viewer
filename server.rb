@@ -68,6 +68,21 @@ class Server < Sinatra::Base
     end
   end
 
+  get '/playlists/favorite/tracks' do
+    playlist_id = '0Efusp2XptMk4cfDN7K7Q9'
+    response = HTTParty.get("https://api.spotify.com/v1/playlists/#{playlist_id}",
+                            headers: { 'Authorization' => "Bearer #{@tokens[:access]}"})
+
+    song_items = JSON.parse(response.body)['tracks']['items']
+
+    song_data = song_items.map { |item| { name: item['track']['name'],
+                                          id: item['track']['id'],
+                                          album: item['track']['album']['name'],
+                                          spotify_code: "https://scannables.scdn.co/uri/plain/png/000000/white/1280/spotify:track:#{item['track']['id']}"} }
+
+    return 200, [], {success: true, data: {songs: song_data}, errors: []}.to_json
+  end
+
   private
 
   def refresh_access_token
